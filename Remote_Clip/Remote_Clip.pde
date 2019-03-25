@@ -2,20 +2,24 @@ import controlP5.*;
 import processing.serial.*;
 Serial myPort;
 ControlP5 cp5;
-String hc05 = "/dev/tty.DSDTECHHC-05-DevB";
+String hc05 = "/dev/tty.MICCLIPRECIEVER-DevB";
 String [] portName; 
 PImage mic;
 int angle = 90;
 float counter = 0.0;
 int maroon = #6F054D;
 int active =  #920766;
+int sliderValue;
 boolean connected = false;
 
 PFont f;
 ControlFont cf1;
+ControlFont cf2;
+
 
 
 void setup() {
+  //PImage icon = loadImage("BatteryLogo7.png");
 
   PImage[] upImg = {loadImage("data/up_arrow.png"), loadImage("data/up_arrow_over.png"), loadImage("data/up_arrow_active.png")};
   PImage[] downImg = {loadImage("data/down_arrow.png"), loadImage("data/down_arrow_over.png"), loadImage("data/down_arrow_active.png")};
@@ -23,6 +27,7 @@ void setup() {
 
   f = createFont("helvetica neue", 30, true);
   cf1 = new ControlFont(createFont("helvetica neue", 20, true));
+  cf2 = new ControlFont(createFont("helvetica neue", 10, true));
 
 
   textFont(f, 40);
@@ -38,7 +43,7 @@ void setup() {
   cp5.addButton("up")
     .setPosition(100, 500)
     .updateDisplayMode(CENTER)
-    .setSize(200, 200)
+    .setSize(100, 100)
     //.setImages(upImg);
     .setImages(upImg);
 
@@ -57,6 +62,24 @@ void setup() {
     .setColorForeground(active)
     .setFont(cf1)
     ;
+
+  cp5.addButton("Apply")
+    .setSize(50, 25)
+    .setPosition(325, 660)
+    .updateDisplayMode(CENTER)
+    .setColorBackground(maroon)
+    .setColorForeground(active)
+    .setFont(cf2)
+    ;
+
+  cp5.addSlider("Angle")
+    .updateDisplayMode(CENTER)
+    .setColorBackground(maroon)
+    .setSize(200, 25)
+    .setMax(160)
+    .setMin(30)
+    .setLabel("")
+    .setPosition(250, 625);
 }
 
 void draw() {
@@ -70,8 +93,8 @@ void draw() {
       myPort = new Serial(this, hc05, 9600);
       println("connected");
       connected=true;
-      myPort.write(51);
-      myPort.write(13);
+      myPort.write(253);
+      angle = 90;
     }
     catch(Exception e) { 
       connected=false;
@@ -93,37 +116,50 @@ void draw() {
 
 
 void up(int theValue) {
-  if (!connected) return;
-  println("up");
-  myPort.write(50);
-  myPort.write(13);
-  //if (angle+10>180) return;
+  if (connected) {
 
-  angle-=10;
 
-  println(angle);
+    println("up");
+    myPort.write(254);
+    if (!(angle-10<0)) {
+
+      angle-=10;
+    }
+    println(angle);
+  }
 }
 
 void down(int theValue) {
-  if (!connected) return;
+  if (connected) {
 
-  println("down");
-  myPort.write(49);
-  myPort.write(13);
-  //if (angle-10<0) return;
-  angle+=10;
+    println("down");
+    myPort.write(255);
+    if (!(angle+10>160)) {
 
-  println(angle);
+      angle+=10;
+    }
+
+    println(angle);
+  }
 }
 
 void Reset(int theValue) {
   //if (!connected) return;
 
   angle=90;
-  myPort.write(51);
-  myPort.write(13);
+  myPort.write(253);
 }
 
+void Angle(int theValue) {
+
+  sliderValue = theValue;
+  angle = sliderValue;
+}
+
+void Apply(int theValue) {
+  angle = sliderValue;
+  myPort.write(sliderValue);
+}
 
 float degToRad(int a) {
   return a*(PI/180.);
